@@ -1,0 +1,88 @@
+# dpo_config.yaml
+## data config
+dataset_name: trl-lib/ultrafeedback_binarized #trl-lib/ultrafeedback_binarized #ginlee/ultrafeedback_binarized_21349 #ginlee/hh-rlhf_21349 #ginlee/ultrafeedback_3000 #
+dataset_train_split: train
+dataset_test_split: test
+# datasets:
+#   - path: trl-lib/ultrafeedback_binarized
+#     split: train[:-2910]
+gradient_checkpointing_use_reentrant: false
+
+report_to: [wandb, tensorboard]
+entity: puzzle-ai-next-gen-tech
+project: rlhf
+run_name: (runpod)gemma3-all-2200_200-lora64_64-shuffle-filter-pfs-noVital-1e-4-lora-DPO-gemma3-train_beta01_1e-5
+output_dir: /workspace/models/gemma3-all-2200_200-lora64_64-shuffle-filter-pfs-noVital-1e-4-lora-DPO-gemma3-train_beta01_1e-5
+
+## script_config
+
+## model config (https://github.com/huggingface/trl/blob/main/trl/trainer/model_config.py)
+model_name_or_path: /workspace/models/gemma3-all-2200_200-lora64_64-shuffle-filter-pfs-noVital-1e-4
+model_revision: main
+dtype: bfloat16
+trust_remote_code: true
+attn_implementation: flash_attention_2 #sdpa #
+use_peft: true
+lora_r: 16
+lora_alpha: 32
+lora_dropout: 0.05
+lora_target_modules: [q_proj,k_proj,v_proj,o_proj, gate_proj, up_proj, down_proj]
+lora_target_parameters:
+lora_modules_to_save:
+lora_task_type: CAUSAL_LM
+use_rslora: false
+use_dora: false
+tf32: true
+load_in_8bit: false
+load_in_4bit: true
+bnb_4bit_quant_type: nf4
+bnb_4bit_compute_dtype: bfloat16
+use_bnb_nested_quant: true
+
+
+## dpo config (https://github.com/huggingface/trl/blob/main/trl/trainer/dpo_config.py)
+model_init_kwargs: #Keyword arguments for `AutoModelForCausalLM.from_pretrained`, used when the `model` argument of the [`DPOTrainer`] is provided as a string.
+ref_model_init_kwargs: # Keyword arguments for `AutoModelForCausalLM.from_pretrained`, used when the `ref_model` argument of the [`DPOTrainer`] is provided as a string.
+force_use_ref_model: false #If you provide a PEFT model as the active model and wish to use a different model for the `ref_model`, set this flag to `True`.
+disable_dropout: true #Whether to disable dropout in the model and reference model.
+use_logits_to_keep: false #If `True`, only a specified number of logits are computed in the forward pass. This can be useful for saving memory and speeding up training by not computing the logits for all tokens, especially in scenarios when working with very long prompts where labels are ignored (-100).
+
+### Parameters that control the data preprocessing
+dataset_num_proc: 32
+dataloader_num_workers: 16
+label_pad_token_id: -100
+max_prompt_length: 1152 #512 #
+max_length: 1536 #1024
+truncation_mode: keep_end #Truncation mode to use when the sequence exceeds `max_length`. Possible values are `"keep_end"` and `"keep_start"`.
+padding_free: false
+# precompute_ref_log_probs: false
+# precompute_ref_batch_size: 4
+# tools:
+
+### Parameters that control the training
+loss_type: sigmoid
+use_liger_loss: true
+base_model_attribute_name: model
+beta: 0.1
+
+### Parameters whose default values are overridden from TrainingArguments
+num_train_epochs: 2
+per_device_train_batch_size: 32
+# per_device_eval_batch_size: 4
+gradient_accumulation_steps: 1
+learning_rate: 1e-5
+warmup_ratio: 0.1
+logging_steps: 20
+lr_scheduler_type: cosine
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+bf16: true
+
+optim: adamw_8bit #adamw_torch_fused #
+save_steps: 600
+eval_steps: 20
+per_device_eval_batch_size: 32
+eval_strategy: steps
+
+seed: 42
