@@ -409,6 +409,9 @@ def main(script_args: ScriptArguments):
 
     # Spawn dp workers, and setup pipes for communication
     master_port = get_open_port()
+    print("master_port",master_port)
+    master_port = 12345
+    print("master_port",master_port)
     connections = []
     processes = []
     for data_parallel_rank in range(script_args.data_parallel_size):

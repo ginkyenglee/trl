@@ -1,0 +1,61 @@
+# dataset_name: trl-lib/ultrafeedback-prompt
+# dataset_train_split: train
+model_name_or_path: /workspace/models/gemma-3-4b-it
+reward_funcs: [trl.rewards.puzzle_rewards.reward_with_openai_judge_hallucination]
+
+# TraningArgs
+output_dir: "gemma3-4b-GRPO"
+use_vllm: true
+vllm_mode: colocate
+vllm_gpu_memory_utilization: 0.5
+num_generations: 4
+max_prompt_length: 6000
+max_completion_length: 16384
+beta: 0.0
+temperature: 1.0
+bf16: true
+per_device_train_batch_size: 4
+gradient_checkpointing: true
+shuffle_dataset: false
+log_completions: true
+
+# PeftArgs
+use_peft: true
+lora_r: 16
+lora_alpha: 32
+lora_dropout: 0.05
+lora_target_modules: [q_proj,k_proj,v_proj,o_proj, gate_proj, up_proj, down_proj]
+lora_target_parameters:
+lora_modules_to_save:
+lora_task_type: CAUSAL_LM
+use_rslora: false
+use_dora: false
+tf32: true
+load_in_8bit: false
+load_in_4bit: true
+bnb_4bit_quant_type: nf4
+bnb_4bit_compute_dtype: bfloat16
+use_bnb_nested_quant: true
+
+push_to_hub: false
+
+#reward_weights = [0.7,0.3],
+
+
+# per_device_train_batch_size:
+# per_device_eval_batch_size:
+# gradient_accumulation_steps:
+# eval_accumulation_steps:
+# eval_delay:
+# torch_empty_cache_steps:
+
+# learning_rate:
+# weight_decay:
+# num_train_epochs:
+# lr_scheduler_type:
+# warmup_ratio:
+# warmup_steps:
+
+# # GRPO-TraningArgs
+# use_vllm: true
+# vllm_mode: colocate
