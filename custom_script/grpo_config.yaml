@@ -1,23 +1,24 @@
 # dataset_name: trl-lib/ultrafeedback-prompt
 # dataset_train_split: train
-model_name_or_path: /workspace/models/gemma-3-4b-it
-reward_funcs: [trl.rewards.puzzle_rewards.reward_with_openai_judge_hallucination]
+model_name_or_path: /workspace/models/gemma3-all-2200_200-lora64_64-shuffle-filter-pfs-noVital-1e-4 #/workspace/models/gemma3-all-2200_200-lora64_64-shuffle-filter-pfs-noVital-1e-4 
+reward_funcs: [trl.rewards.puzzle_rewards.reward_with_openai_judge_hallucination, trl.rewards.puzzle_rewards.reward_with_openai_judge_task]
+reward_inference_models: o4-mini
 
 # TraningArgs
-output_dir: "gemma3-4b-GRPO"
-use_vllm: true
-vllm_mode: colocate
-vllm_gpu_memory_utilization: 0.5
-num_generations: 4
-max_prompt_length: 6000
-max_completion_length: 16384
-beta: 0.0
-temperature: 1.0
-bf16: true
-per_device_train_batch_size: 4
-gradient_checkpointing: true
-shuffle_dataset: false
-log_completions: true
+output_dir: "/workspace/models/gemma3-12b-it-trained-GRPO_55_puzzle1600_5e-5_o4mini_G4"
+report_to: [wandb, tensorboard]
+entity: puzzle-ai-next-gen-tech
+project: rlhf
+run_name: gemma3-12b-it-trained-GRPO_55_puzzle1600_5e-5_o4mini_G4
+
+
+# do_eval: true
+# do_train: true
+
+eval_strategy: steps
+eval_steps: 10
+dataloader_drop_last: true
+
 
 # PeftArgs
 use_peft: true
@@ -31,31 +32,48 @@ lora_task_type: CAUSAL_LM
 use_rslora: false
 use_dora: false
 tf32: true
-load_in_8bit: false
-load_in_4bit: true
+load_in_8bit: false # [NEW!] A bit more accurate, uses 2x memory
+load_in_4bit: true # 4 bit quantization to reduce memory
+bf16: true
+
 bnb_4bit_quant_type: nf4
 bnb_4bit_compute_dtype: bfloat16
 use_bnb_nested_quant: true
 
 push_to_hub: false
+reward_weights: [0.5,0.5]
+per_device_train_batch_size: 8
+per_device_eval_batch_size: 8
+gradient_accumulation_steps: 4
 
-#reward_weights = [0.7,0.3],
-
-
-# per_device_train_batch_size:
-# per_device_eval_batch_size:
-# gradient_accumulation_steps:
-# eval_accumulation_steps:
-# eval_delay:
-# torch_empty_cache_steps:
-
-# learning_rate:
-# weight_decay:
-# num_train_epochs:
-# lr_scheduler_type:
-# warmup_ratio:
-# warmup_steps:
+learning_rate: 5e-5
+num_train_epochs: 2
+max_steps: -1
+save_strategy: epoch
+save_total_limit: 3
+seed: 42
+data_seed: 42
 
 # # GRPO-TraningArgs
-# use_vllm: true
-# vllm_mode: colocate
+use_vllm: true
+vllm_mode: colocate
+vllm_gpu_memory_utilization: 0.33
+# vllm_mode: server
+# vllm_host: "http://127.0.0.1"
+# vllm_port: 8000
+
+num_generations: 4
+max_prompt_length: 7745 #7745
+max_completion_length: 4096 #5000 #8192
+beta: 0.0
+temperature: 1.0
+gradient_checkpointing: true
+shuffle_dataset: true
+log_completions: true
+logging_steps: 5
+
+dataloader_num_workers: 16
+
+# DAPO paper
+mask_truncated_completions: false #true
+epsilon_high: 0.28
